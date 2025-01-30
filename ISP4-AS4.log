@@ -1,0 +1,170 @@
+﻿﻿service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname ISP4-AS4
+!
+boot-start-marker
+boot-end-marker
+!
+!
+enable secret laboratorio
+!
+no aaa new-model
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+no ip domain lookup
+ip domain name lab
+ip cef
+ipv6 unicast-routing
+ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+username operador privilege 15 secret laboratorio
+!
+redundancy
+!
+!
+ip ssh version 2
+! 
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ ip address 4.4.4.1 255.255.255.0
+ ipv6 address 2001:4:4:4::1/64
+!
+interface Ethernet0/0
+ description ISP6-AS6
+ ip address 6.0.64.2 255.255.255.252
+ ipv6 address 2001:6:64::2/126
+ no shutdown
+!
+interface Ethernet0/1
+ no ip address
+ shutdown
+!
+interface Ethernet0/2
+ no ip address
+ shutdown
+!
+interface Ethernet0/3
+ no ip address
+ shutdown
+!
+interface Ethernet1/0
+ no ip address
+ shutdown
+!
+interface Ethernet1/1
+ description ISP2-AS2-R1
+ ip address 4.0.42.1 255.255.255.252
+ ipv6 address 2001:4:42::1/126
+ no shutdown
+!
+interface Ethernet1/2
+ no ip address
+ shutdown
+!
+interface Ethernet1/3
+ no ip address
+ shutdown
+!
+router bgp 4
+ bgp log-neighbor-changes
+ neighbor 4.0.42.2 remote-as 2
+ neighbor 4.0.42.2 description AS2-R1
+ neighbor 4.0.42.2 ttl-security hops 1
+ neighbor 4.0.42.2 password lab
+ neighbor 6.0.64.1 remote-as 6
+ neighbor 6.0.64.1 description ISP6-AS6
+ neighbor 2001:4:42::2 remote-as 2
+ neighbor 2001:4:42::2 description AS2-R1
+ neighbor 2001:4:42::2 ttl-security hops 1
+ neighbor 2001:4:42::2 password lab
+ neighbor 2001:6:64::1 remote-as 6
+ neighbor 2001:6:64::1 description ISP6-AS6
+ !
+ address-family ipv4
+  network 4.4.4.0 mask 255.255.255.0
+  neighbor 4.0.42.2 activate
+  neighbor 4.0.42.2 send-community both
+  neighbor 4.0.42.2 maximum-prefix 1000
+  neighbor 6.0.64.1 activate
+  neighbor 6.0.64.1 send-community both
+  no neighbor 2001:4:42::2 activate
+  no neighbor 2001:6:64::1 activate
+ exit-address-family
+ !
+ address-family ipv6
+  network 2001:4::/32
+  network 2001:4:4:4::/64
+  neighbor 2001:4:42::2 activate
+  neighbor 2001:4:42::2 send-community both
+  neighbor 2001:4:42::2 maximum-prefix 1000
+  neighbor 2001:6:64::1 activate
+  neighbor 2001:6:64::1 send-community both
+ exit-address-family
+!
+ip forward-protocol nd
+!
+ip bgp-community new-format
+!
+no ip http server
+no ip http secure-server
+!
+ipv6 route 2001:4::/32 Null0 name ISP4-AS4-CIDR
+!
+!
+!
+control-plane
+!
+!
+!
+!
+!
+!
+!
+!
+line con 0
+ exec-timeout 0 0
+ logging synchronous
+line aux 0
+line vty 0 4
+ privilege level 15
+ login local
+ transport input telnet ssh
+!
+!
+end

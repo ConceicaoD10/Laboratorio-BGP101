@@ -1,0 +1,287 @@
+﻿﻿service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname ISP1-AS1
+!
+boot-start-marker
+boot-end-marker
+!
+!
+enable secret laboratorio
+!
+no aaa new-model
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+no ip domain lookup
+ip domain name lab
+ip cef
+ipv6 unicast-routing
+ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+username operador privilege 15 secret laboratorio
+!
+redundancy
+!
+!
+ip ssh version 2
+! 
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Loopback11
+ ip address 1.1.11.1 255.255.255.0
+ ipv6 address 2001:1:1:11::1/64
+!
+interface Loopback12
+ ip address 1.1.12.1 255.255.255.0
+ ipv6 address 2001:1:1:12::1/64
+!
+interface Loopback13
+ ip address 1.1.13.1 255.255.255.0
+ ipv6 address 2001:1:1:13::1/64
+!
+interface Loopback14
+ ip address 1.1.14.1 255.255.255.0
+ ipv6 address 2001:1:1:14::1/64
+!
+interface Loopback15
+ ip address 1.1.15.1 255.255.255.0
+ ipv6 address 2001:1:1:15::1/64
+!
+interface Loopback16
+ ip address 1.1.16.1 255.255.255.0
+ ipv6 address 2001:1:1:16::1/64
+!
+interface Ethernet0/0
+ no ip address
+ shutdown
+!
+interface Ethernet0/1
+ no ip address
+ shutdown
+!
+interface Ethernet0/2
+ description ISP2-AS2-R1
+ ip address 2.0.12.2 255.255.255.252
+ ipv6 address 2001:2:12::2/126
+ no shutdown
+!
+interface Ethernet0/3
+ no ip address
+ shutdown
+!
+interface Ethernet1/0
+ description ISP11-AS11
+ ip address 1.0.11.1 255.255.255.252
+ ipv6 address 2001:1:11::1/126
+ no shutdown
+!
+interface Ethernet1/1
+ no ip address
+ shutdown
+!
+interface Ethernet1/2
+ no ip address
+ shutdown
+!
+interface Ethernet1/3
+ no ip address
+ shutdown
+!
+router bgp 1
+ bgp log-neighbor-changes
+ neighbor 1.0.11.2 remote-as 11
+ neighbor 1.0.11.2 description ISP11-AS11
+ neighbor 2.0.12.1 remote-as 2
+ neighbor 2.0.12.1 description AS2-R1
+ neighbor 2001:1:11::2 remote-as 11
+ neighbor 2001:1:11::2 description ISP11-AS11
+ neighbor 2001:2:12::1 remote-as 2
+ neighbor 2001:2:12::1 description AS2-R1
+ !
+ address-family ipv4
+  network 1.1.11.0 mask 255.255.255.0
+  network 1.1.12.0 mask 255.255.255.0
+  network 1.1.13.0 mask 255.255.255.0
+  network 192.168.168.0
+  redistribute connected route-map RM-CONNECTED2BGP-IPV4
+  neighbor 1.0.11.2 activate
+  neighbor 1.0.11.2 send-community both
+  neighbor 1.0.11.2 default-originate
+  neighbor 1.0.11.2 route-map RM-AS11-IPV4-IN in
+  neighbor 1.0.11.2 route-map RM-AS11-IPV4-OUT out
+  neighbor 2.0.12.1 activate
+  neighbor 2.0.12.1 send-community both
+  neighbor 2.0.12.1 route-map RM-AS1-TO-AS2-IPV4-IN in
+  neighbor 2.0.12.1 route-map RM-AS1-TO-AS2-IPV4-OUT out
+  no neighbor 2001:1:11::2 activate
+  no neighbor 2001:2:12::1 activate
+ exit-address-family
+ !
+ address-family ipv6
+  redistribute connected route-map RM-CONNECTED2BGP-IPV6
+  network 2001:1::/32
+  network 2001:1:1:11::/64
+  network 2001:1:1:12::/64
+  network 2001:1:1:13::/64
+  neighbor 2001:1:11::2 activate
+  neighbor 2001:1:11::2 send-community both
+  neighbor 2001:1:11::2 default-originate
+  neighbor 2001:1:11::2 route-map RM-AS11-IPV6-IN in
+  neighbor 2001:1:11::2 route-map RM-AS11-IPV6-OUT out
+  neighbor 2001:2:12::1 activate
+  neighbor 2001:2:12::1 send-community both
+  neighbor 2001:2:12::1 route-map RM-AS1-TO-AS2-IPV6-IN in
+  neighbor 2001:2:12::1 route-map RM-AS1-TO-AS2-IPV6-OUT out
+ exit-address-family
+!
+ip forward-protocol nd
+!
+ip bgp-community new-format
+ip community-list standard COMM-AS1-CUSTOMERS-IPV4 permit 1:1004
+ip community-list standard COMM-AS1-CUSTOMERS-IPV6 permit 1:1006
+ip as-path access-list 1 permit ^$
+ip as-path access-list 2 permit ^11(_11)*$
+!
+no ip http server
+no ip http secure-server
+ip route 192.168.168.0 255.255.255.0 Null0 name TESTE-BOGON-2
+!
+!
+ip prefix-list ALL-ROUTES-IPV4 seq 5 permit 0.0.0.0/0 le 24
+!
+ip prefix-list PL-AS1-IPV4 seq 5 permit 0.0.0.0/0 le 24
+!
+ip prefix-list PL-AS1-RTBH-IPV4 seq 5 permit 0.0.0.0/0 ge 32
+!
+ip prefix-list PL-AS11-11-11-11-0 seq 5 permit 11.11.11.0/24
+!
+ip prefix-list PL-AS11-IPV4 seq 5 permit 11.11.0.0/16 le 24
+!
+ip prefix-list PL-CONNECTED2BGP-IPV4 seq 5 permit 1.1.14.0/24
+ip prefix-list PL-CONNECTED2BGP-IPV4 seq 10 permit 1.1.15.0/24
+ip prefix-list PL-CONNECTED2BGP-IPV4 seq 15 permit 1.1.16.0/24
+!
+ip prefix-list TESTE-BOGON seq 5 permit 1.1.16.0/24
+!
+ip prefix-list TESTE-BOGON-2 seq 5 permit 192.168.168.0/24
+ipv6 route 2001:1::/32 Null0 name ISP1-AS1-CIDR
+!
+!
+ipv6 prefix-list ALL-ROUTES-IPV6 seq 5 permit ::/0 le 48
+!
+ipv6 prefix-list PL-AS1-IPV6 seq 5 permit ::/0 le 48
+!
+ipv6 prefix-list PL-AS1-IPV6-RTBH seq 5 permit ::/32 ge 128
+!
+ipv6 prefix-list PL-AS11-IPV6 seq 5 permit 2001:11::/32 le 48
+ipv6 prefix-list PL-AS11-IPV6 seq 10 permit 2804:11::/32 le 48
+!
+ipv6 prefix-list PL-CONNECTED2BGP-IPV6 seq 5 permit 2001:1:1:14::/64
+ipv6 prefix-list PL-CONNECTED2BGP-IPV6 seq 10 permit 2001:1:1:15::/64
+ipv6 prefix-list PL-CONNECTED2BGP-IPV6 seq 15 permit 2001:1:1:16::/64
+route-map RM-AS11-IPV4-OUT permit 10
+ match ip address prefix-list ALL-ROUTES-IPV4
+!
+route-map RM-AS11-IPV6-OUT permit 10
+ match ipv6 address prefix-list ALL-ROUTES-IPV6
+!
+route-map RM-AS1-TO-AS2-IPV6-OUT permit 10
+ match ipv6 address prefix-list PL-AS1-RTBH-IPV6
+!
+route-map RM-AS1-TO-AS2-IPV6-OUT permit 20
+ match ipv6 address prefix-list PL-AS1-IPV6
+!
+route-map RM-AS1-TO-AS2-IPV4-OUT permit 10
+ match ip address prefix-list PL-AS1-RTBH-IPV4
+!
+route-map RM-AS1-TO-AS2-IPV4-OUT permit 15
+ match ip address prefix-list TESTE-BOGON
+ set as-path prepend 1 1 65000 1
+!
+route-map RM-AS1-TO-AS2-IPV4-OUT permit 16
+ match ip address prefix-list TESTE-BOGON-2
+!
+route-map RM-AS1-TO-AS2-IPV4-OUT permit 20
+ match ip address prefix-list PL-AS1-IPV4
+ set community 2:4012 2:5002 2:10190 7:100 additive
+!
+route-map RM-AS1-TO-AS2-IPV6-IN permit 20
+ match ipv6 address prefix-list ALL-ROUTES-IPV6
+!
+route-map RM-AS1-TO-AS2-IPV4-IN permit 10
+ match ip address prefix-list ALL-ROUTES-IPV4
+!
+route-map RM-CONNECTED2BGP-IPV4 permit 10
+ match ip address prefix-list PL-CONNECTED2BGP-IPV4
+!
+route-map RM-AS11-IPV4-IN permit 10
+ match ip address prefix-list PL-AS11-IPV4
+ match as-path 2
+ set local-preference 1000
+ set community 1:1004 additive
+!
+route-map RM-CONNECTED2BGP-IPV6 permit 10
+ match ipv6 address prefix-list PL-CONNECTED2BGP-IPV6
+!
+route-map RM-AS11-IPV6-IN permit 10
+ match as-path 2
+ match ipv6 address prefix-list PL-AS11-IPV6
+ set local-preference 1000
+ set community 1:1006
+!
+!
+!
+control-plane
+!
+!
+!
+!
+!
+!
+!
+!
+line con 0
+ exec-timeout 0 0
+ logging synchronous
+line aux 0
+line vty 0 4
+ privilege level 15
+ login local
+ transport input telnet ssh
+!
+!
+end

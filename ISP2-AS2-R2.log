@@ -1,0 +1,608 @@
+﻿﻿service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname ISP2-AS2-R2
+!
+boot-start-marker
+boot-end-marker
+!
+!
+enable secret laboratorio
+!
+no aaa new-model
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+no ip domain lookup
+ip domain name lab
+ip cef
+ipv6 unicast-routing
+ipv6 cef
+!
+multilink bundle-name authenticated
+no mpls ldp advertise-labels
+mpls ldp advertise-labels for LDP_acl
+no mpls ip propagate-ttl forwarded
+!
+!
+!
+!
+!
+!
+!
+!
+username operador privilege 15 secret laboratorio
+!
+redundancy
+!
+no cdp log mismatch duplex
+!
+ip ssh version 2
+!
+class-map match-all CoPP-IBGP
+ match access-group name CoPP-IBGP-ACL
+class-map match-any CoPP-BGP-UNTRUSTED
+ match access-group name CoPP-BGP-UNTRUSTED-ACL
+class-map match-all CoPP-BGP-EXTERNAL
+ match access-group name CoPP-BGP-EXTERNAL-ACL
+!
+policy-map CoPP-AS2
+ class CoPP-IBGP
+  police 256000 64000 conform-action transmit  exceed-action drop 
+ class CoPP-BGP-EXTERNAL
+  police 256000 64000 conform-action transmit  exceed-action drop 
+ class CoPP-BGP-UNTRUSTED
+  police 8000 conform-action drop  exceed-action drop 
+!
+! 
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ ip address 2.2.255.2 255.255.255.255
+ ipv6 address 2001:2:2:255::2/128
+ ospfv3 1 ipv6 area 0.0.0.0
+ ospfv3 1 ipv4 area 0.0.0.0
+!
+interface Ethernet0/0
+ description ISP2-AS2-R1
+ ip address 2.2.0.2 255.255.255.252
+ ipv6 address 2001:2:2::2/126
+ mpls ip
+ ospfv3 network point-to-point
+ ospfv3 1 ipv6 area 0.0.0.0
+ ospfv3 1 ipv4 area 0.0.0.0
+ no shutdown
+!
+interface Ethernet0/1
+ description ISP2-AS2-R4
+ ip address 2.2.0.9 255.255.255.252
+ ipv6 address 2001:2:2::9/126
+ mpls ip
+ ospfv3 network point-to-point
+ ospfv3 1 ipv4 area 0.0.0.0
+ ospfv3 1 ipv6 area 0.0.0.0
+ no shutdown
+!
+interface Ethernet0/2
+ description IX
+ ip address 123.123.0.2 255.255.255.0
+ ipv6 address 2001:123:123::2/64
+ no shutdown
+!
+interface Ethernet0/3
+ no ip address
+ shutdown
+!
+interface Ethernet1/0
+ no ip address
+ shutdown
+!
+interface Ethernet1/1
+ description ISP5-AS5
+ ip address 5.0.52.2 255.255.255.252
+ ipv6 address 2001:5:52::2/126
+ no shutdown
+!
+interface Ethernet1/2
+ no ip address
+ shutdown
+!
+interface Ethernet1/3
+ no ip address
+ shutdown
+!
+router ospfv3 1
+ router-id 2.2.255.2
+ !
+ address-family ipv4 unicast
+  passive-interface Loopback0
+ exit-address-family
+ !
+ address-family ipv6 unicast
+  passive-interface Loopback0
+ exit-address-family
+!
+router bgp 2
+ template peer-policy IBGP-PEER-POLICY
+  route-reflector-client
+  next-hop-self
+  send-community both
+ exit-peer-policy
+ !
+ template peer-session IBGP-PEER-SESSION
+  remote-as 2
+  cluster-id 0.0.0.23
+  update-source Loopback0
+ exit-peer-session
+ !
+ bgp router-id 2.2.255.2
+ bgp cluster-id 23
+ no bgp enforce-first-as
+ bgp log-neighbor-changes
+ neighbor IBGP-IPV6 peer-group
+ neighbor IBGP-IPV6 remote-as 2
+ neighbor IBGP-IPV6 update-source Loopback0
+ neighbor 2.2.255.1 inherit peer-session IBGP-PEER-SESSION
+ neighbor 2.2.255.1 description AS2-R1
+ neighbor 2.2.255.3 inherit peer-session IBGP-PEER-SESSION
+ neighbor 2.2.255.3 description AS2-R3
+ neighbor 2.2.255.4 inherit peer-session IBGP-PEER-SESSION
+ neighbor 2.2.255.4 description AS2-R4
+ neighbor 5.0.52.1 remote-as 5
+ neighbor 5.0.52.1 description ISP5-AS5
+ neighbor 5.0.52.1 ttl-security hops 1
+ neighbor 5.0.52.1 password lab
+ neighbor 2001:2:2:255::1 peer-group IBGP-IPV6
+ neighbor 2001:2:2:255::1 description AS2-R1
+ neighbor 2001:2:2:255::3 peer-group IBGP-IPV6
+ neighbor 2001:2:2:255::3 description AS2-R3
+ neighbor 2001:2:2:255::4 peer-group IBGP-IPV6
+ neighbor 2001:2:2:255::4 description AS2-R4
+ neighbor 2001:5:52::1 remote-as 5
+ neighbor 2001:5:52::1 description ISP5-AS5
+ neighbor 2001:5:52::1 ttl-security hops 1
+ neighbor 2001:5:52::1 password lab
+ neighbor 2001:123:123::254 remote-as 123
+ neighbor 2001:123:123::254 description IX-AS123
+ neighbor 123.123.0.254 remote-as 123
+ neighbor 123.123.0.254 description IX-AS123
+ !
+ address-family ipv4
+  neighbor 2.2.255.1 activate
+  neighbor 2.2.255.1 inherit peer-policy IBGP-PEER-POLICY
+  neighbor 2.2.255.3 activate
+  neighbor 2.2.255.3 inherit peer-policy IBGP-PEER-POLICY
+  neighbor 2.2.255.4 activate
+  neighbor 2.2.255.4 inherit peer-policy IBGP-PEER-POLICY
+  neighbor 5.0.52.1 activate
+  neighbor 5.0.52.1 send-community both
+  neighbor 5.0.52.1 route-map RM-AS2-TO-AS5-IPV4-IN in
+  neighbor 5.0.52.1 route-map RM-AS2-TO-AS5-IPV4-OUT out
+  no neighbor 2001:2:2:255::1 activate
+  no neighbor 2001:2:2:255::3 activate
+  no neighbor 2001:2:2:255::4 activate
+  no neighbor 2001:5:52::1 activate
+  no neighbor 2001:123:123::254 activate
+  neighbor 123.123.0.254 activate
+  neighbor 123.123.0.254 send-community both
+  neighbor 123.123.0.254 route-map RM-AS2-TO-IXAS123-IPV4-IN in
+  neighbor 123.123.0.254 route-map RM-AS2-TO-IXAS123-IPV4-OUT out
+ exit-address-family
+ !
+ address-family vpnv4
+  neighbor 2.2.255.1 activate
+  neighbor 2.2.255.1 send-community extended
+  neighbor 2.2.255.1 inherit peer-policy IBGP-PEER-POLICY
+  neighbor 2.2.255.3 activate
+  neighbor 2.2.255.3 send-community extended
+  neighbor 2.2.255.3 inherit peer-policy IBGP-PEER-POLICY
+  neighbor 2.2.255.4 activate
+  neighbor 2.2.255.4 send-community extended
+  neighbor 2.2.255.4 inherit peer-policy IBGP-PEER-POLICY
+ exit-address-family
+ !
+ address-family ipv6
+  network 2001:2::/32 route-map RM-COMM-CIDR32-IPV6
+  network 2001:2::/33 route-map RM-COMM-CIDR33-IPV6
+  network 2001:2::/34 route-map RM-COMM-CIDR34-IPV6
+  neighbor IBGP-IPV6 send-community both
+  neighbor IBGP-IPV6 route-reflector-client
+  neighbor IBGP-IPV6 next-hop-self
+  neighbor 2001:2:2:255::1 activate
+  neighbor 2001:2:2:255::3 activate
+  neighbor 2001:2:2:255::4 activate
+  neighbor 2001:5:52::1 activate
+  neighbor 2001:5:52::1 send-community both
+  neighbor 2001:5:52::1 route-map RM-AS2-TO-AS5-IPV6-IN in
+  neighbor 2001:5:52::1 route-map RM-AS2-TO-AS5-IPV6-OUT out
+  neighbor 2001:123:123::254 activate
+  neighbor 2001:123:123::254 send-community both
+  neighbor 2001:123:123::254 route-map RM-AS2-TO-IXAS123-IPV6-IN in
+  neighbor 2001:123:123::254 route-map RM-AS2-TO-IXAS123-IPV6-OUT out
+ exit-address-family
+ !
+ address-family vpnv6
+  neighbor 2.2.255.1 activate
+  neighbor 2.2.255.1 send-community extended
+  neighbor 2.2.255.1 inherit peer-policy IBGP-PEER-POLICY
+  neighbor 2.2.255.3 activate
+  neighbor 2.2.255.3 send-community extended
+  neighbor 2.2.255.3 inherit peer-policy IBGP-PEER-POLICY
+  neighbor 2.2.255.4 activate
+  neighbor 2.2.255.4 send-community extended
+  neighbor 2.2.255.4 inherit peer-policy IBGP-PEER-POLICY
+ exit-address-family
+!
+ip forward-protocol nd
+!
+ip bgp-community new-format
+ip community-list standard COMM-TRANSIT-AS4-IPV4 permit 2:1011
+ip community-list standard COMM-TRANSIT-AS4-IPV6 permit 2:1012
+ip community-list standard COMM-TRANSIT-AS5-IPV4 permit 2:1021
+ip community-list standard COMM-TRANSIT-AS5-IPV6 permit 2:1022
+ip community-list standard COMM-PEERING-AS123-IPV4 permit 2:2011
+ip community-list standard COMM-PEERING-AS123-IPV6 permit 2:2012
+ip community-list standard COMM-CLIENTES-PEERING-APENAS-IPV4 permit 2:5001
+ip community-list standard COMM-CLIENTES-PEERING-APENAS-IPV6 permit 2:5002
+ip community-list standard COMM-CLIENTES-TRANSITO-APENAS-IPV4 permit 2:5003
+ip community-list standard COMM-CLIENTES-TRANSITO-APENAS-IPV6 permit 2:5004
+ip community-list standard COMM-CLIENTES-TRANSITO-ALL-IPV4 permit 2:10000
+ip community-list standard COMM-CLIENTES-TRANSITO-ALL-IPV6 permit 2:11000
+ip community-list standard COMM-CLIENTES-RTBH permit 2:666
+ip community-list standard COMM-AS2-CIDR22-IPV4 permit 2:4011
+ip community-list standard COMM-AS2-CIDR23-IPV4 permit 2:4012
+ip community-list standard COMM-AS2-CIDR24-IPV4 permit 2:4013
+ip community-list standard COMM-AS2-CIDR32-IPV6 permit 2:4021
+ip community-list standard COMM-AS2-CIDR33-IPV6 permit 2:4022
+ip community-list standard COMM-AS2-CIDR34-IPV6 permit 2:4023
+ip community-list standard COMM-NO-EXPORT permit 2:500
+ip community-list standard COMM-CLIENTES-LOCALPREF-10150 permit 2:10150
+ip community-list standard COMM-CLIENTES-LOCALPREF-10190 permit 2:10190
+ip community-list standard COMM-TRANSIT-AS5-NO-EXPORT permit 2:9212
+ip community-list standard COMM-PEERING-AS123-NO-EXPORT permit 2:9221
+ip community-list expanded COMM-AS2-USO-RESTRITO deny ^2:10150$
+ip community-list expanded COMM-AS2-USO-RESTRITO deny ^2:10190$
+ip community-list expanded COMM-AS2-USO-RESTRITO deny ^2:500$
+ip community-list expanded COMM-AS2-USO-RESTRITO deny ^2:501[1-5]$
+ip community-list expanded COMM-AS2-USO-RESTRITO deny ^2:502[1-5]$
+ip community-list expanded COMM-AS2-USO-RESTRITO deny ^2:666$
+ip community-list expanded COMM-AS2-USO-RESTRITO deny ^2:900$
+ip community-list expanded COMM-AS2-USO-RESTRITO deny ^2:910$
+ip community-list expanded COMM-AS2-USO-RESTRITO deny ^2:921[1-2]$
+ip community-list expanded COMM-AS2-USO-RESTRITO deny ^2:9221$
+ip community-list expanded COMM-AS2-USO-RESTRITO permit 2:*
+ip community-list expanded COMM-AS2-ALL permit ^2:*$
+ip community-list expanded COMM-TRANSIT-AS5-IPV4-PREPEND-1 permit _2:5021_2:10000_
+ip community-list expanded COMM-TRANSIT-AS5-IPV4-PREPEND-2 permit _2:5022_2:10000_
+ip community-list expanded COMM-TRANSIT-AS5-IPV4-PREPEND-3 permit _2:5023_2:10000_
+ip community-list expanded COMM-TRANSIT-AS5-IPV4-PREPEND-4 permit _2:5024_2:10000_
+ip community-list expanded COMM-TRANSIT-AS5-IPV4-PREPEND-5 permit _2:5025_2:10000_
+ip community-list expanded COMM-TRANSIT-AS5-IPV6-PREPEND-1 permit _2:5021_2:11000_
+ip community-list expanded COMM-TRANSIT-AS5-IPV6-PREPEND-2 permit _2:5022_2:11000_
+ip community-list expanded COMM-TRANSIT-AS5-IPV6-PREPEND-3 permit _2:5023_2:11000_
+ip community-list expanded COMM-TRANSIT-AS5-IPV6-PREPEND-4 permit _2:5024_2:11000_
+ip community-list expanded COMM-TRANSIT-AS5-IPV6-PREPEND-5 permit _2:5025_2:11000_
+ip as-path access-list 1 permit ^$
+ip as-path access-list 500 permit _0_
+ip as-path access-list 500 permit _23456_
+ip as-path access-list 500 permit _(6449[6-9])_|_(6450[0-9])_|_(6451[0-1])_|_(6553[6-9])_|_(6554[0-9])_|_(6555[0-1])_
+ip as-path access-list 500 permit _6(4(5(1[2-9]|[2-9][0-9])|[6-9][0-9][0-9])|5([0-4][0-9][0-9]|5([0-2][0-9]|3[0-5])))_
+ip as-path access-list 500 permit _6555[2-9]_|_655[6-9][0-9]_|_65[6-9][0-9][0-9]_|_6[6-9][0-9][0-9][0-9]_
+ip as-path access-list 500 permit _[7-9][0-9][0-9][0-9][0-9]_|_1[0-2][0-9][0-9][0-9][0-9]_|_130[0-9][0-9][0-9]_
+ip as-path access-list 500 permit _1310[0-6][0-9]_|_13107[0-1]_
+ip as-path access-list 500 permit _42[0-8][0-9][0-9][0-9][0-9][0-9][0-9][0-9]_
+ip as-path access-list 500 permit _(429[0-3][0-9][0-9][0-9][0-9][0-9][0-9])_|_(4294[0-8][0-9][0-9][0-9][0-9][0-9])_
+ip as-path access-list 500 permit _(42949[0-5][0-9][0-9][0-9][0-9])_|_(429496[0-6][0-9][0-9][0-9])_
+ip as-path access-list 500 permit _(4294967[0-1][0-9][0-9])_|_(42949672[0-8][0-9])_|_(429496729[0-4])_
+!
+no ip http server
+no ip http secure-server
+ip route 192.0.2.0 255.255.255.0 Null0 name RTBH
+!
+ip access-list standard LDP_acl
+ permit 2.2.255.0 0.0.0.255
+!
+ip access-list extended CoPP-BGP-EXTERNAL-ACL
+ permit tcp 5.0.52.0 0.0.0.3 any eq bgp
+ permit tcp 5.0.52.0 0.0.0.3 eq bgp any
+ permit tcp 123.123.0.0 0.0.0.255 any eq bgp
+ permit tcp 123.123.0.0 0.0.0.255 eq bgp any
+ip access-list extended CoPP-BGP-UNTRUSTED-ACL
+ permit tcp any any eq bgp
+ permit tcp any eq bgp any
+ip access-list extended CoPP-IBGP-ACL
+ permit tcp 2.2.255.0 0.0.0.255 any eq bgp
+ permit tcp 2.2.255.0 0.0.0.255 eq bgp any
+!
+!
+ip prefix-list ALL-ROUTES-IPV4 seq 5 permit 0.0.0.0/0 le 24
+!
+ip prefix-list PL-AS2-IPV4 seq 5 permit 2.2.0.0/16 le 24
+!
+ip prefix-list PL-BOGONS-IPV4 seq 5 permit 0.0.0.0/8 le 32
+ip prefix-list PL-BOGONS-IPV4 seq 10 permit 10.0.0.0/8 le 32
+ip prefix-list PL-BOGONS-IPV4 seq 15 permit 100.64.0.0/10 le 32
+ip prefix-list PL-BOGONS-IPV4 seq 20 permit 127.0.0.0/8 le 32
+ip prefix-list PL-BOGONS-IPV4 seq 25 permit 169.254.0.0/16 le 32
+ip prefix-list PL-BOGONS-IPV4 seq 30 permit 172.16.0.0/12 le 32
+ip prefix-list PL-BOGONS-IPV4 seq 35 permit 192.0.0.0/2
+ip prefix-list PL-BOGONS-IPV4 seq 40 permit 192.0.2.0/24 le 32
+ip prefix-list PL-BOGONS-IPV4 seq 45 permit 192.88.99.0/24 le 32
+ip prefix-list PL-BOGONS-IPV4 seq 50 permit 192.168.0.0/16 le 32
+ip prefix-list PL-BOGONS-IPV4 seq 55 permit 198.18.0.0/15 le 32
+ip prefix-list PL-BOGONS-IPV4 seq 60 permit 198.51.100.0/24 le 32
+ip prefix-list PL-BOGONS-IPV4 seq 65 permit 203.0.113.0/24 le 32
+ip prefix-list PL-BOGONS-IPV4 seq 70 permit 224.0.0.0/4 le 32
+ip prefix-list PL-BOGONS-IPV4 seq 75 permit 240.0.0.0/4 le 32
+ip prefix-list PL-BOGONS-IPV4 seq 80 permit 255.255.255.255/32
+!
+ip prefix-list PL-DFZ-IPV4 seq 5 permit 0.0.0.0/0 le 24
+ipv6 route 2001:2::/34 Null0 name ISP2-AS2-IPV6-CIDR34
+ipv6 route 2001:2::/33 Null0 name ISP2-AS2-IPV6-CIDR33
+ipv6 route 2001:2::/32 Null0 name ISP2-AS2-IPV6-CIDR32
+!
+!
+ipv6 prefix-list ALL-ROUTES-IPV6 seq 5 permit ::/0 le 48
+!
+ipv6 prefix-list PL-AS2-IPV6 seq 5 permit 2001:2::/32 le 48
+!
+ipv6 prefix-list PL-BOGONS-IPV6 seq 5 permit ::/8 le 128
+ipv6 prefix-list PL-BOGONS-IPV6 seq 10 permit ::/128
+ipv6 prefix-list PL-BOGONS-IPV6 seq 15 permit ::1/128
+ipv6 prefix-list PL-BOGONS-IPV6 seq 20 permit ::FFFF:0.0.0.0/96 le 128
+ipv6 prefix-list PL-BOGONS-IPV6 seq 25 permit 64:FF9B:1::/48 le 128
+ipv6 prefix-list PL-BOGONS-IPV6 seq 30 permit 100::/64 le 128
+ipv6 prefix-list PL-BOGONS-IPV6 seq 35 permit 2001:2::/48 le 128
+ipv6 prefix-list PL-BOGONS-IPV6 seq 40 permit 2001:10::/28 le 128
+ipv6 prefix-list PL-BOGONS-IPV6 seq 45 permit 2001:DB8::/32 le 128
+ipv6 prefix-list PL-BOGONS-IPV6 seq 50 permit 2002::/16 le 128
+ipv6 prefix-list PL-BOGONS-IPV6 seq 55 permit 3FFE::/16 le 128
+ipv6 prefix-list PL-BOGONS-IPV6 seq 60 permit 5F00::/16 le 128
+ipv6 prefix-list PL-BOGONS-IPV6 seq 65 permit 3FFF::/20 le 128
+ipv6 prefix-list PL-BOGONS-IPV6 seq 70 permit FC00::/7 le 128
+ipv6 prefix-list PL-BOGONS-IPV6 seq 75 permit FE80::/10 le 128
+ipv6 prefix-list PL-BOGONS-IPV6 seq 80 permit FEC0::/10 le 128
+ipv6 prefix-list PL-BOGONS-IPV6 seq 85 permit FF00::/8 le 128
+!
+ipv6 prefix-list PL-DFZ-IPV6 seq 5 permit ::/0 le 48
+route-map RM-AS2-TO-IXAS123-IPV6-OUT deny 10
+ match rpki invalid
+!
+route-map RM-AS2-TO-IXAS123-IPV6-OUT deny 20
+ match ipv6 address prefix-list PL-BOGONS-IPV6
+!
+route-map RM-AS2-TO-IXAS123-IPV6-OUT deny 30
+ match as-path 500
+!
+route-map RM-AS2-TO-IXAS123-IPV6-OUT deny 40
+ match community COMM-IX-NOEXPORT
+!
+route-map RM-AS2-TO-IXAS123-IPV6-OUT deny 50
+ match community COMM-PEERING-AS123-NO-EXPORT
+!
+route-map RM-AS2-TO-IXAS123-IPV6-OUT permit 60
+ match as-path 1
+ match ipv6 address prefix-list PL-AS2-IPV6
+!
+route-map RM-AS2-TO-IXAS123-IPV6-OUT permit 70
+ match community COMM-CLIENTES-TRANSITO-ALL-IPV6
+!
+route-map RM-AS2-TO-IXAS123-IPV4-OUT deny 10
+ match rpki invalid
+!
+route-map RM-AS2-TO-IXAS123-IPV4-OUT deny 20
+ match ip address prefix-list PL-BOGONS-IPV4
+!
+route-map RM-AS2-TO-IXAS123-IPV4-OUT deny 30
+ match as-path 500
+!
+route-map RM-AS2-TO-IXAS123-IPV4-OUT deny 40
+ match community COMM-PEERING-AS123-NO-EXPORT
+!
+route-map RM-AS2-TO-IXAS123-IPV4-OUT deny 50
+ match community COMM-NO-EXPORT
+!
+route-map RM-AS2-TO-IXAS123-IPV4-OUT permit 60
+ match ip address prefix-list PL-AS2-IPV4
+ match as-path 1
+!
+route-map RM-AS2-TO-IXAS123-IPV4-OUT permit 70
+ match community COMM-CLIENTES-TRANSITO-ALL-IPV4
+!
+route-map RM-AS2-TO-AS5-IPV6-OUT deny 10
+ match rpki invalid
+!
+route-map RM-AS2-TO-AS5-IPV6-OUT deny 20
+ match ipv6 address prefix-list PL-BOGONS-IPV6
+!
+route-map RM-AS2-TO-AS5-IPV6-OUT deny 30
+ match as-path 500
+!
+route-map RM-AS2-TO-AS5-IPV6-OUT deny 40
+ match community COMM-TRANSIT-AS5-NO-EXPORT
+!
+route-map RM-AS2-TO-AS5-IPV6-OUT deny 50
+ match community COMM-NO-EXPORT
+!
+route-map RM-AS2-TO-AS5-IPV6-OUT permit 60
+ match community COMM-TRANSIT-AS5-PREPEND-1
+ set as-path prepend 2
+!
+route-map RM-AS2-TO-AS5-IPV6-OUT permit 70
+ match community COMM-TRANSIT-AS5-PREPEND-2
+ set as-path prepend 2 2
+!
+route-map RM-AS2-TO-AS5-IPV6-OUT permit 80
+ match community COMM-TRANSIT-AS5-PREPEND-3
+ set as-path prepend 2 2 2
+!
+route-map RM-AS2-TO-AS5-IPV6-OUT permit 90
+ match community COMM-TRANSIT-AS5-PREPEND-4
+ set as-path prepend 2 2 2 2
+!
+route-map RM-AS2-TO-AS5-IPV6-OUT permit 100
+ match community COMM-TRANSIT-AS5-PREPEND-5
+ set as-path prepend 2 2 2 2 2
+!
+route-map RM-AS2-TO-AS5-IPV6-OUT permit 110
+ match community COMM-AS2-CIDR32-IPV6 COMM-AS2-CIDR33-IPV6 COMM-AS2-CIDR34-IPV6
+!
+route-map RM-AS2-TO-AS5-IPV6-OUT permit 120
+ match community COMM-CLIENTES-TRANSITO-ALL-IPV6
+!
+route-map RM-AS2-TO-AS5-IPV4-OUT deny 10
+ match rpki invalid
+!
+route-map RM-AS2-TO-AS5-IPV4-OUT deny 20
+ match ip address prefix-list PL-BOGONS-IPV4
+!
+route-map RM-AS2-TO-AS5-IPV4-OUT deny 30
+ match as-path 500
+!
+route-map RM-AS2-TO-AS5-IPV4-OUT deny 40
+ match community COMM-TRANSIT-AS5-NO-EXPORT
+!
+route-map RM-AS2-TO-AS5-IPV4-OUT deny 50
+ match community COMM-NO-EXPORT
+!
+route-map RM-AS2-TO-AS5-IPV4-OUT permit 60
+ match community COMM-TRANSIT-AS5-PREPEND-1
+ set as-path prepend 2
+!
+route-map RM-AS2-TO-AS5-IPV4-OUT permit 70
+ match community COMM-TRANSIT-AS5-PREPEND-2
+ set as-path prepend 2 2
+!
+route-map RM-AS2-TO-AS5-IPV4-OUT permit 80
+ match community COMM-TRANSIT-AS5-PREPEND-3
+ set as-path prepend 2 2 2
+!
+route-map RM-AS2-TO-AS5-IPV4-OUT permit 90
+ match community COMM-TRANSIT-AS5-PREPEND-4
+ set as-path prepend 2 2 2 2
+!
+route-map RM-AS2-TO-AS5-IPV4-OUT permit 100
+ match community COMM-TRANSIT-AS5-PREPEND-5
+ set as-path prepend 2 2 2 2 2
+!
+route-map RM-AS2-TO-AS5-IPV4-OUT permit 110
+ match community COMM-AS2-CIDR22-IPV4 COMM-AS2-CIDR23-IPV4 COMM-AS2-CIDR24-IPV4
+!
+route-map RM-AS2-TO-AS5-IPV4-OUT permit 120
+ match community COMM-CLIENTES-TRANSITO-ALL-IPV4
+!
+route-map RM-AS2-TO-IXAS123-IPV6-IN deny 10
+ match rpki invalid
+!
+route-map RM-AS2-TO-IXAS123-IPV6-IN deny 20
+ match ipv6 address prefix-list PL-BOGONS-IPV6
+!
+route-map RM-AS2-TO-IXAS123-IPV6-IN deny 30
+ match as-path 500
+!
+route-map RM-AS2-TO-IXAS123-IPV6-IN permit 40
+ match ipv6 address prefix-list ALL-ROUTES-IPV6
+ set local-preference 800
+ set community 2:2011 additive
+!
+route-map RM-AS2-TO-IXAS123-IPV4-IN deny 10
+ match rpki invalid
+!
+route-map RM-AS2-TO-IXAS123-IPV4-IN deny 20
+ match ip address prefix-list PL-BOGONS-IPV4
+!
+route-map RM-AS2-TO-IXAS123-IPV4-IN deny 30
+ match as-path 500
+!
+route-map RM-AS2-TO-IXAS123-IPV4-IN permit 40
+ match ip address prefix-list ALL-ROUTES-IPV4
+ set local-preference 800
+ set community 2:2011 additive
+!
+route-map RM-AS2-TO-AS5-IPV6-IN deny 10
+ match rpki invalid
+!
+route-map RM-AS2-TO-AS5-IPV6-IN deny 20
+ match ipv6 address prefix-list PL-BOGONS-IPV6
+!
+route-map RM-AS2-TO-AS5-IPV6-IN deny 30
+ match as-path 500
+!
+route-map RM-AS2-TO-AS5-IPV6-IN permit 40
+ match ipv6 address prefix-list PL-DFZ-IPV6
+ set local-preference 600
+ set comm-list COMM-AS2-ALL delete
+ set community 2:1022 additive
+!
+route-map RM-AS2-TO-AS5-IPV4-IN deny 10
+ match rpki invalid
+!
+route-map RM-AS2-TO-AS5-IPV4-IN deny 20
+ match ip address prefix-list PL-BOGONS-IPV4
+!
+route-map RM-AS2-TO-AS5-IPV4-IN deny 30
+ match as-path 500
+!
+route-map RM-AS2-TO-AS5-IPV4-IN permit 40
+ match ip address prefix-list PL-DFZ-IPV4
+ set local-preference 600
+ set comm-list COMM-AS2-ALL delete
+ set community 2:1021 additive
+!
+route-map RM-COMM-CIDR32-IPV6 permit 10
+ set community 2:4021
+!
+route-map RM-COMM-CIDR33-IPV6 permit 10
+ set community 2:4022
+!
+route-map RM-COMM-CIDR34-IPV6 permit 10
+ set community 2:4023
+!
+!
+mpls ldp router-id Loopback0
+!
+control-plane
+ service-policy input CoPP-AS2
+!
+!
+!
+!
+!
+!
+!
+!
+line con 0
+ exec-timeout 0 0
+ logging synchronous
+line aux 0
+line vty 0 4
+ privilege level 15
+ login local
+ transport input telnet ssh
+!
+!
+end

@@ -1,0 +1,175 @@
+﻿﻿service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname ISP7-AS7
+!
+boot-start-marker
+boot-end-marker
+!
+!
+enable secret laboratorio
+!
+no aaa new-model
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+no ip domain lookup
+ip domain name lab
+ip cef
+ipv6 unicast-routing
+ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+username operador privilege 15 secret laboratorio
+!
+redundancy
+!
+!
+ip ssh version 2
+! 
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ ip address 7.7.7.1 255.255.255.0
+ ipv6 address 2001:7:7:7::1/64
+!
+interface Ethernet0/0
+ description ISP5-AS5
+ ip address 7.0.75.1 255.255.255.252
+ ipv6 address 2001:7:75::1/126
+ no shutdown
+!
+interface Ethernet0/1
+ description ISP6-AS6
+ ip address 7.0.76.1 255.255.255.252
+ ipv6 address 2001:7:76::1/126
+ no shutdown
+!
+interface Ethernet0/2
+ no ip address
+ shutdown
+!
+interface Ethernet0/3
+ no ip address
+ shutdown
+!
+interface Ethernet1/0
+ description ISP8-AS8
+ ip address 7.0.78.1 255.255.255.252
+ ipv6 address 2001:7:78::1/126
+ no shutdown
+!
+interface Ethernet1/1
+ no ip address
+ shutdown
+!
+interface Ethernet1/2
+ no ip address
+ shutdown
+!
+interface Ethernet1/3
+ no ip address
+ shutdown
+!
+router bgp 7
+ bgp log-neighbor-changes
+ neighbor 7.0.75.2 remote-as 5
+ neighbor 7.0.75.2 description ISP5-AS5
+ neighbor 7.0.76.2 remote-as 6
+ neighbor 7.0.76.2 description ISP6-AS6
+ neighbor 7.0.78.2 remote-as 8
+ neighbor 7.0.78.2 description ISP8-AS8
+ neighbor 2001:7:75::2 remote-as 5
+ neighbor 2001:7:75::2 description ISP5-AS5
+ neighbor 2001:7:76::2 remote-as 6
+ neighbor 2001:7:76::2 description ISP6-AS6
+ neighbor 2001:7:78::2 remote-as 8
+ neighbor 2001:7:78::2 description ISP8-AS8
+ !
+ address-family ipv4
+  network 7.7.7.0 mask 255.255.255.0
+  neighbor 7.0.75.2 activate
+  neighbor 7.0.75.2 send-community both
+  neighbor 7.0.76.2 activate
+  neighbor 7.0.76.2 send-community both
+  neighbor 7.0.78.2 activate
+  neighbor 7.0.78.2 send-community both
+  no neighbor 2001:7:75::2 activate
+  no neighbor 2001:7:76::2 activate
+  no neighbor 2001:7:78::2 activate
+ exit-address-family
+ !
+ address-family ipv6
+  network 2001:7::/32
+  network 2001:7:7:7::/64
+  neighbor 2001:7:75::2 activate
+  neighbor 2001:7:75::2 send-community both
+  neighbor 2001:7:76::2 activate
+  neighbor 2001:7:76::2 send-community both
+  neighbor 2001:7:78::2 activate
+  neighbor 2001:7:78::2 send-community both
+ exit-address-family
+!
+ip forward-protocol nd
+!
+ip bgp-community new-format
+!
+no ip http server
+no ip http secure-server
+!
+ipv6 route 2001:7::/32 Null0 name ISP7-AS7-CIDR
+!
+!
+!
+control-plane
+!
+!
+!
+!
+!
+!
+!
+!
+line con 0
+ exec-timeout 0 0
+ logging synchronous
+line aux 0
+line vty 0 4
+ privilege level 15
+ login local
+ transport input telnet ssh
+!
+!
+end

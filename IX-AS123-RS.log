@@ -1,0 +1,230 @@
+﻿﻿service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname IX-AS123-RS
+!
+boot-start-marker
+boot-end-marker
+!
+!
+enable secret laboratorio
+!
+no aaa new-model
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+no ip domain lookup
+ip domain name lab
+ip cef
+ipv6 unicast-routing
+ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+username operador privilege 15 secret laboratorio
+!
+redundancy
+!
+no cdp log mismatch duplex
+!
+ip ssh version 2
+! 
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Ethernet0/0
+ no ip address
+ shutdown
+!
+interface Ethernet0/1
+ ip address 123.123.0.254 255.255.255.0
+ ipv6 address 2001:123:123::254/64
+ no shutdown
+!
+interface Ethernet0/2
+ no ip address
+ shutdown
+!
+interface Ethernet0/3
+ no ip address
+ shutdown
+!
+router bgp 123
+ bgp log-neighbor-changes
+ neighbor 2001:123:123::2 remote-as 2
+ neighbor 2001:123:123::2 description ISP2-AS2-R2
+ neighbor 2001:123:123::8 remote-as 8
+ neighbor 2001:123:123::8 description ISP8-AS8
+ neighbor 2001:123:123::31 remote-as 31
+ neighbor 2001:123:123::31 description ISP31-AS31
+ neighbor 123.123.0.2 remote-as 2
+ neighbor 123.123.0.2 description ISP2-AS2-R2
+ neighbor 123.123.0.8 remote-as 8
+ neighbor 123.123.0.8 description ISP8-AS8
+ neighbor 123.123.0.31 remote-as 31
+ neighbor 123.123.0.31 description ISP31-AS31
+ !
+ address-family ipv4
+  no neighbor 2001:123:123::2 activate
+  no neighbor 2001:123:123::8 activate
+  no neighbor 2001:123:123::31 activate
+  neighbor 123.123.0.2 activate
+  neighbor 123.123.0.2 send-community both
+  neighbor 123.123.0.2 route-server-client
+  neighbor 123.123.0.2 route-map AS2-IPV4-IN in
+  neighbor 123.123.0.2 route-map AS2-IPV4-OUT out
+  neighbor 123.123.0.8 activate
+  neighbor 123.123.0.8 send-community both
+  neighbor 123.123.0.8 route-server-client
+  neighbor 123.123.0.8 route-map AS8-IPV4-IN in
+  neighbor 123.123.0.8 route-map AS8-IPV4-OUT out
+  neighbor 123.123.0.31 activate
+  neighbor 123.123.0.31 send-community both
+  neighbor 123.123.0.31 route-server-client
+  neighbor 123.123.0.31 route-map AS31-IPV4-IN in
+  neighbor 123.123.0.31 route-map AS31-IPV4-OUT out
+ exit-address-family
+ !
+ address-family ipv6
+  neighbor 2001:123:123::2 activate
+  neighbor 2001:123:123::2 send-community both
+  neighbor 2001:123:123::2 route-server-client
+  neighbor 2001:123:123::2 route-map AS2-IPV6-IN in
+  neighbor 2001:123:123::2 route-map AS2-IPV6-OUT out
+  neighbor 2001:123:123::8 activate
+  neighbor 2001:123:123::8 send-community both
+  neighbor 2001:123:123::8 route-server-client
+  neighbor 2001:123:123::8 route-map AS8-IPV6-IN in
+  neighbor 2001:123:123::8 route-map AS8-IPV6-OUT out
+  neighbor 2001:123:123::31 activate
+  neighbor 2001:123:123::31 send-community both
+  neighbor 2001:123:123::31 route-server-client
+  neighbor 2001:123:123::31 route-map AS31-IPV6-IN in
+  neighbor 2001:123:123::31 route-map AS31-IPV6-OUT out
+ exit-address-family
+!
+ip forward-protocol nd
+!
+ip bgp-community new-format
+ip community-list standard COMM-IXAS123-MEMBERS-IPV4 permit 123:1004
+ip community-list standard COMM-IXAS123-MEMBERS-IPV6 permit 123:1006
+!
+no ip http server
+no ip http secure-server
+!
+!
+ip prefix-list PL-AS2-IPV4 seq 5 permit 2.2.0.0/16 le 24
+ip prefix-list PL-AS2-IPV4 seq 10 permit 1.1.0.0/16 le 24
+ip prefix-list PL-AS2-IPV4 seq 15 permit 11.11.0.0/16 le 24
+ip prefix-list PL-AS2-IPV4 seq 20 permit 3.3.0.0/16 le 24
+!
+ip prefix-list PL-AS31-IPV4 seq 5 permit 31.31.0.0/16 le 24
+!
+ip prefix-list PL-AS8-IPV4 seq 5 permit 8.8.0.0/16 le 24
+!
+!
+ipv6 prefix-list PL-AS2-IPV6 seq 5 permit 2001:2::/32 le 48
+ipv6 prefix-list PL-AS2-IPV6 seq 10 permit 2001:1::/32 le 48
+ipv6 prefix-list PL-AS2-IPV6 seq 15 permit 2001:11::/32 le 48
+ipv6 prefix-list PL-AS2-IPV6 seq 20 permit 2001:3::/32 le 48
+!
+ipv6 prefix-list PL-AS31-IPV6 seq 10 permit 2001:31::/32 le 48
+!
+ipv6 prefix-list PL-AS8-IPV6 seq 5 permit 2001:8::/32 le 48
+route-map AS7-IPV4-OUT permit 10
+ match community COMM-IXAS123-MEMBERS-IPV4
+!
+route-map AS2-IPV4-OUT permit 10
+ match community COMM-IXAS123-MEMBERS-IPV4
+!
+route-map AS2-IPV6-OUT permit 10
+ match community COMM-IXAS123-MEMBERS-IPV6
+!
+route-map AS8-IPV6-OUT permit 10
+ match community COMM-IXAS123-MEMBERS-IPV6
+!
+route-map AS8-IPV4-OUT permit 10
+ match community COMM-IXAS123-MEMBERS-IPV4
+!
+route-map AS31-IPV4-OUT permit 10
+ match community COMM-IXAS123-MEMBERS-IPV4
+!
+route-map AS31-IPV6-OUT permit 10
+ match community COMM-IXAS123-MEMBERS-IPV6
+!
+route-map AS8-IPV6-IN permit 10
+ match ipv6 address prefix-list PL-AS8-IPV6
+ set community 123:1006 additive
+!
+route-map AS8-IPV4-IN permit 10
+ match ip address prefix-list PL-AS8-IPV4
+ set community 123:1004 additive
+!
+route-map AS2-IPV4-IN permit 10
+ match ip address prefix-list PL-AS2-IPV4
+ set community 123:1004 additive
+!
+route-map AS2-IPV6-IN permit 10
+ match ipv6 address prefix-list PL-AS2-IPV6
+ set community 123:1006 additive
+!
+route-map AS31-IPV4-IN permit 10
+ match ip address prefix-list PL-AS31-IPV4
+ set community 123:1004 additive
+!
+route-map AS31-IPV6-IN permit 10
+ match ipv6 address prefix-list PL-AS31-IPV6
+ set community 123:1006 additive
+!
+!
+!
+control-plane
+!
+!
+!
+!
+!
+!
+!
+!
+line con 0
+ exec-timeout 0 0
+ logging synchronous
+line aux 0
+line vty 0 4
+ privilege level 15
+ login local
+ transport input telnet ssh
+!
+!
+end

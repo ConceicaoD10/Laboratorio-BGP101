@@ -1,0 +1,166 @@
+﻿﻿service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname ISP8-AS8
+!
+boot-start-marker
+boot-end-marker
+!
+!
+enable secret laboratorio
+!
+no aaa new-model
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+no ip domain lookup
+ip domain name lab
+ip cef
+ipv6 unicast-routing
+ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+username operador privilege 15 secret laboratorio
+!
+redundancy
+!
+no cdp log mismatch duplex
+!
+ip ssh version 2
+! 
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ ip address 8.8.8.1 255.255.255.0
+ ipv6 address 2001:8:8:8::1/64
+!
+interface Ethernet0/0
+ description IX
+ ip address 123.123.0.8 255.255.255.0
+ ipv6 address 2001:123:123::8/64
+ no shutdown
+!
+interface Ethernet0/1
+ no ip address
+ shutdown
+!
+interface Ethernet0/2
+ no ip address
+ shutdown
+!
+interface Ethernet0/3
+ no ip address
+ shutdown
+!
+interface Ethernet1/0
+ description ISP7-AS7
+ ip address 7.0.78.2 255.255.255.252
+ ipv6 address 2001:7:78::2/126
+ no shutdown
+!
+interface Ethernet1/1
+ no ip address
+ shutdown
+!
+interface Ethernet1/2
+ no ip address
+ shutdown
+!
+interface Ethernet1/3
+ no ip address
+ shutdown
+!
+router bgp 8
+ no bgp enforce-first-as
+ bgp log-neighbor-changes
+ neighbor 7.0.78.1 remote-as 7
+ neighbor 7.0.78.1 description ISP7-AS7
+ neighbor 2001:7:78::1 remote-as 7
+ neighbor 2001:7:78::1 description ISP7-AS7
+ neighbor 2001:123:123::254 remote-as 123
+ neighbor 2001:123:123::254 description IX-AS123
+ neighbor 123.123.0.254 remote-as 123
+ neighbor 123.123.0.254 description IX-AS123
+ !
+ address-family ipv4
+  network 8.8.8.0 mask 255.255.255.0
+  neighbor 7.0.78.1 activate
+  neighbor 7.0.78.1 send-community both
+  no neighbor 2001:7:78::1 activate
+  no neighbor 2001:123:123::254 activate
+  neighbor 123.123.0.254 activate
+  neighbor 123.123.0.254 send-community both
+ exit-address-family
+ !
+ address-family ipv6
+  network 2001:8::/32
+  network 2001:8:8:8::/64
+  neighbor 2001:7:78::1 activate
+  neighbor 2001:7:78::1 send-community both
+  neighbor 2001:123:123::254 activate
+  neighbor 2001:123:123::254 send-community both
+ exit-address-family
+!
+ip forward-protocol nd
+!
+ip bgp-community new-format
+!
+no ip http server
+no ip http secure-server
+!
+ipv6 route 2001:8::/32 Null0 name ISP8-AS8-CIDR
+!
+!
+!
+control-plane
+!
+!
+!
+!
+!
+!
+!
+!
+line con 0
+ exec-timeout 0 0
+ logging synchronous
+line aux 0
+line vty 0 4
+ privilege level 15
+ login local
+ transport input telnet ssh
+!
+!
+end

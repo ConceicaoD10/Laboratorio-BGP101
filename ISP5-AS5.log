@@ -1,0 +1,170 @@
+﻿﻿service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname ISP5-AS5
+!
+boot-start-marker
+boot-end-marker
+!
+!
+enable secret laboratorio
+!
+no aaa new-model
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+no ip domain lookup
+ip domain name lab
+ip cef
+ipv6 unicast-routing
+ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+username operador privilege 15 secret laboratorio
+!
+redundancy
+!
+!
+ip ssh version 2
+! 
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ ip address 5.5.5.1 255.255.255.0
+ ipv6 address 2001:5:5:5::1/64
+!
+interface Ethernet0/0
+ description ISP7-AS7
+ ip address 7.0.75.2 255.255.255.252
+ ipv6 address 2001:7:75::2/126
+ no shutdown
+!
+interface Ethernet0/1
+ no ip address
+ shutdown
+!
+interface Ethernet0/2
+ no ip address
+ shutdown
+!
+interface Ethernet0/3
+ no ip address
+ shutdown
+!
+interface Ethernet1/0
+ no ip address
+ shutdown
+!
+interface Ethernet1/1
+ description ISP2-AS2-R2
+ ip address 5.0.52.1 255.255.255.252
+ ipv6 address 2001:5:52::1/126
+ no shutdown
+!
+interface Ethernet1/2
+ no ip address
+ shutdown
+!
+interface Ethernet1/3
+ no ip address
+ shutdown
+!
+router bgp 5
+ bgp log-neighbor-changes
+ neighbor 5.0.52.2 remote-as 2
+ neighbor 5.0.52.2 description AS2-R2
+ neighbor 5.0.52.2 ttl-security hops 1
+ neighbor 5.0.52.2 password lab
+ neighbor 7.0.75.1 remote-as 7
+ neighbor 7.0.75.1 description ISP7-AS7
+ neighbor 2001:5:52::2 remote-as 2
+ neighbor 2001:5:52::2 description AS2-R2
+ neighbor 2001:5:52::2 ttl-security hops 1
+ neighbor 2001:5:52::2 password lab
+ neighbor 2001:7:75::1 remote-as 7
+ neighbor 2001:7:75::1 description ISP7-AS7
+ !
+ address-family ipv4
+  network 5.5.5.0 mask 255.255.255.0
+  neighbor 5.0.52.2 activate
+  neighbor 5.0.52.2 send-community both
+  neighbor 5.0.52.2 maximum-prefix 1000
+  neighbor 7.0.75.1 activate
+  neighbor 7.0.75.1 send-community both
+  no neighbor 2001:5:52::2 activate
+  no neighbor 2001:7:75::1 activate
+ exit-address-family
+ !
+ address-family ipv6
+  network 2001:5::/32
+  network 2001:5:5:5::/64
+  neighbor 2001:5:52::2 activate
+  neighbor 2001:5:52::2 send-community both
+  neighbor 2001:5:52::2 maximum-prefix 1000
+  neighbor 2001:7:75::1 activate
+  neighbor 2001:7:75::1 send-community both
+ exit-address-family
+!
+ip forward-protocol nd
+!
+ip bgp-community new-format
+!
+no ip http server
+no ip http secure-server
+!
+ipv6 route 2001:5::/32 Null0 name ISP5-AS5-CIDR
+!
+!
+!
+control-plane
+!
+!
+!
+!
+!
+!
+!
+!
+line con 0
+ exec-timeout 0 0
+ logging synchronous
+line aux 0
+line vty 0 4
+ privilege level 15
+ login local
+ transport input telnet ssh
+!
+!
+end

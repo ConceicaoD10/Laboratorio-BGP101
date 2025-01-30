@@ -1,0 +1,116 @@
+﻿﻿service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname AS65000-RTR-2
+!
+boot-start-marker
+boot-end-marker
+!
+!
+enable secret laboratorio
+!
+no aaa new-model
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+no ip domain lookup
+ip domain name lab
+ip cef
+ipv6 unicast-routing
+ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+username operador privilege 15 secret laboratorio
+!
+redundancy
+!
+!
+ip ssh version 2
+! 
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Loopback65
+ ip address 100.65.2.1 255.255.255.0
+ ipv6 address 2001:DB8:652::1/64
+!
+interface Ethernet0/0
+ no ip address
+ shutdown
+!
+interface Ethernet0/1
+ no ip address
+ shutdown
+!
+interface Ethernet0/2
+ no ip address
+ shutdown
+!
+interface Ethernet0/3
+ ip address 172.16.0.6 255.255.255.252
+ ipv6 address 2001:DB8:172::6/126
+ no shutdown
+!
+ip forward-protocol nd
+!
+ip bgp-community new-format
+!
+no ip http server
+no ip http secure-server
+ip route 0.0.0.0 0.0.0.0 172.16.0.5 name RTR-2
+!
+ipv6 route ::/0 2001:DB8:172::5 name RTR-2
+!
+!
+!
+control-plane
+!
+!
+!
+!
+!
+!
+!
+!
+line con 0
+ exec-timeout 0 0
+ logging synchronous
+line aux 0
+line vty 0 4
+ privilege level 15
+ login local
+ transport input telnet ssh
+!
+!
+end
