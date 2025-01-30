@@ -37,10 +37,7 @@ o	Configuração de MPLS e MP-BGP para interligar os sites do AS65000.
 ________________________________________
 🙌 Agradecimento
 Agradeço ao Leonardo Furtado pela excelente metodologia e pelo conteúdo aprofundado deste curso. A experiência proporcionada foi essencial para consolidar meus conhecimentos sobre BGP e redes escaláveis. 🚀
-________________________________________
-🔗 Configurações e Resultados
-As configurações completas e as saídas dos roteadores estão disponíveis no meu repositório no GitHub:
-👉 https://github.com/ConceicaoD10?tab=repositories
+
 ________________________________________
 ✅ Conclusão
 O laboratório foi concluído com sucesso, implementando todas as configurações necessárias para garantir funcionalidade, segurança e eficiência da rede. A topologia complexa permitiu testar cenários reais de roteamento, engenharia de tráfego e VPNs. 💪
